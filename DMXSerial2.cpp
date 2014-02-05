@@ -491,6 +491,7 @@ void DMXSerialClass2::tick(void)
         // ignore this packet
 
       } else if (CmdClass == E120_DISCOVERY_COMMAND) { // 0x10
+
         // handle all Discovery commands locally 
         if (Parameter == SWAPINT(E120_DISC_UNIQUE_BRANCH)) { // 0x0001
           // not tested here for pgm space reasons: rdm->Length must be 24+6+6 = 36
@@ -544,17 +545,20 @@ void DMXSerialClass2::tick(void)
 
         } else if (Parameter == SWAPINT(E120_DISC_UN_MUTE)) { // 0x0003
           isHandled = true;
-          if (packetIsForMe) { // 05.12.2013
+          if (packetIsForMe || packetIsForAll) { // 05.12.2013
             if (_rdm.packet.DataLength > 0) {
               // Unexpected data
               // Do nothing
             } else {
               _isMute = false;
-              // Control field
-              _rdm.packet.Data[0] = 0b00000000;
-              _rdm.packet.Data[1] = 0b00000000;
-              _rdm.packet.DataLength = 2;
-              respondMessage(true); // 21.11.2013
+
+              if (!packetIsForAll) {
+				  // Control field
+				  _rdm.packet.Data[0] = 0b00000000;
+				  _rdm.packet.Data[1] = 0b00000000;
+				  _rdm.packet.DataLength = 2;
+				  respondMessage(true); // 21.11.2013
+              }
             }
           }
           

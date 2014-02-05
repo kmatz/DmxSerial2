@@ -238,7 +238,7 @@ struct EEPROMVALUES {
   byte sig1; // 0x6D  signature 1, EPROM values are valid of both signatures match.
   byte sig2; // 0x68  signature 2
   uint16_t startAddress; // the DMX start address can be changed by a RDM command.
-  char deviceLabel[DMXSERIAL_MAX_RDM_STRING_LENGTH]; // the device Label can be changed by a RDM command.
+  char deviceLabel[DMXSERIAL_MAX_RDM_STRING_LENGTH+1]; // the device Label can be changed by a RDM command. +1 byte for the trailing null byte
   DEVICEID deviceID;    // store the device ID to allow easy software updates.
 }; // struct EEPROMVALUES
 

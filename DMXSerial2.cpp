@@ -280,7 +280,7 @@ union RDMMEM {
   struct DISCOVERYMSG discovery;
   
   // the byte array used while receiving and sending.
-  byte buffer[60];
+  byte buffer[255];
 } _rdm; // union RDMMEM
 
 

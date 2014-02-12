@@ -269,7 +269,6 @@ DEVICEID _devIDGroup = { 0x09, 0x87, 0xFF, 0xFF, 0xFF, 0xFF };
 // The Device ID for adressing all devices: 6 times 0xFF.
 DEVICEID _devIDAll = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
 
-
 // This is the buffer for RDM packets beeing received and sent.
 // this structure is needed to RDM data separate from DMX data.
 union RDMMEM {
@@ -660,8 +659,8 @@ void DMXSerialClass2::_processRDMMessage(byte CmdClass, uint16_t Parameter, bool
         devInfo->protocolMajor = 1;
         devInfo->protocolMinor = 0;
         devInfo->deviceModel = SWAPINT(_initData->deviceModelId);
-        devInfo->productCategory = SWAPINT(E120_PRODUCT_CATEGORY_DIMMER_CS_LED);
-        devInfo->softwareVersion = SWAPINT32(0x01000000);// 0x04020900;
+        devInfo->productCategory = SWAPINT(_initData->productCategory);
+        devInfo->softwareVersion = SWAPINT32(_initData->softwareVersion);// 0x04020900;
         devInfo->footprint = SWAPINT(_initData->footprint);
         devInfo->currentPersonality = 1;
         devInfo->personalityCount = 1;

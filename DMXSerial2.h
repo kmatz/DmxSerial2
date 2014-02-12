@@ -107,6 +107,8 @@ struct RDMINIT {
   const uint16_t        additionalCommandsLength;
   const uint16_t       *additionalCommands;
   DEVICEID deviceID;
+  uint16_t productCategory;
+  uint32_t softwareVersion;
 }; // struct RDMINIT
 
 

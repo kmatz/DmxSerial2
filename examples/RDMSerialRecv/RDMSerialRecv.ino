@@ -69,7 +69,9 @@ struct RDMINIT rdmInit = {
      0x12, // valid EEPROM entry is found. This ensures some kind of randomness. You can always set your static device ID
      0x00, // by setting it manually in the EEPROM (sorry, no nifty method yet)
      0x00
-   }
+   },
+   E120_PRODUCT_CATEGORY_DIMMER_CS_LED, // Product Category
+   0x01000000 // Software Version
 };
 
 

@@ -61,7 +61,15 @@ struct RDMINIT rdmInit = {
   1, // Device Model ID
   "Arduino RDM Device", // Device Model Label
   3, // footprint
-  (sizeof(my_pids)/sizeof(uint16_t)), my_pids
+  (sizeof(my_pids)/sizeof(uint16_t)), my_pids,
+  {
+     0x09, // Manufacturer ID, first byte. Change this to your manufacturer ID.
+     0x87, // Manufacturer ID, second byte. Get a manufacturer ID at http://tsp.plasa.org/tsp/working_groups/CP/mfctrIDs.php
+     0x20, // The following 4 bytes are your device ID. Note that the last two bytes will be randomized by the library if no
+     0x12, // valid EEPROM entry is found. This ensures some kind of randomness. You can always set your static device ID
+     0x00, // by setting it manually in the EEPROM (sorry, no nifty method yet)
+     0x00
+   }
 };
 
 

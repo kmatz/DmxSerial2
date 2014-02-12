@@ -362,6 +362,8 @@ void DMXSerialClass2::init(struct RDMINIT *initData, RDMCallbackFunction func, u
   _identifyMode = false;
   _softwareLabel = "Arduino RDM 1.0";
 
+  DeviceIDCpy(initData->deviceID, _devID);
+
   // read from EEPROM or set defaults
   for (unsigned int i = 0; i < sizeof(eeprom); i++)
     ((byte *)(&eeprom))[i] = EEPROM.read(i);
@@ -371,11 +373,6 @@ void DMXSerialClass2::init(struct RDMINIT *initData, RDMCallbackFunction func, u
     _startAddress = eeprom.startAddress;
     strcpy (deviceLabel, eeprom.deviceLabel);
     DeviceIDCpy(_devID, eeprom.deviceID);
-
-    // setup the manufacturer adressing device-ID
-    _devIDGroup[0] = _devID[0];
-    _devIDGroup[1] = _devID[1];
-    
   } else {
     // set default values
     _startAddress = 1;
@@ -383,6 +380,12 @@ void DMXSerialClass2::init(struct RDMINIT *initData, RDMCallbackFunction func, u
     _devID[4] = random255(); // random(255);
     _devID[5] = random255(); // random(255);
   } // if 
+
+  // setup the manufacturer adressing device-ID
+
+  _devIDGroup[0] = _devID[0];
+  _devIDGroup[1] = _devID[1];
+
   _saveEEPRom();
 
   // now start

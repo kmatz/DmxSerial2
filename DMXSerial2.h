@@ -106,6 +106,7 @@ struct RDMINIT {
   // RDMPERSONALITY *personalities;
   const uint16_t        additionalCommandsLength;
   const uint16_t       *additionalCommands;
+  DEVICEID deviceID;
 }; // struct RDMINIT
 
 

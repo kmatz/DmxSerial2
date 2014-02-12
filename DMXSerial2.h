@@ -111,7 +111,19 @@ struct RDMINIT {
   uint32_t softwareVersion;
 }; // struct RDMINIT
 
-
+struct PARAMETER_DESCRIPTION_RESPONSE {
+  uint16_t pid;
+  byte pdlSize;
+  byte dataType;
+  byte commandClass;
+  byte type;
+  byte unit;
+  byte prefix;
+  uint32_t minValidValue;
+  uint32_t maxValidValue;
+  uint32_t defaultValue;
+  char description[32];
+}; // struct DEVICEINFO
 
 class DMXSerialClass2
 {

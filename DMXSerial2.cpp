@@ -361,7 +361,7 @@ void DMXSerialClass2::init(struct RDMINIT *initData, RDMCallbackFunction func, u
   _identifyMode = false;
   _softwareLabel = "Arduino RDM 1.0";
 
-  DeviceIDCpy(initData->deviceID, _devID);
+  DeviceIDCpy(_devID, initData->deviceID);
 
   // read from EEPROM or set defaults
   for (unsigned int i = 0; i < sizeof(eeprom); i++)
@@ -660,7 +660,7 @@ void DMXSerialClass2::_processRDMMessage(byte CmdClass, uint16_t Parameter, bool
         devInfo->protocolMinor = 0;
         devInfo->deviceModel = SWAPINT(_initData->deviceModelId);
         devInfo->productCategory = SWAPINT(_initData->productCategory);
-        devInfo->softwareVersion = SWAPINT32(_initData->softwareVersion);// 0x04020900;
+        devInfo->softwareVersion = SWAPINT32(_initData->softwareVersion);
         devInfo->footprint = SWAPINT(_initData->footprint);
         devInfo->currentPersonality = 1;
         devInfo->personalityCount = 1;
@@ -1064,6 +1064,7 @@ void respondMessage(boolean isHandled, uint16_t nackReason)
 
 // generate a random number 0..255
 int random255() {
+	return 0;
   int num = 0;
   for (int i = 0; i<8; i++) {
      num |= (analogRead(A0) & 0x01) << i;

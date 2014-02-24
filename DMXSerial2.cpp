@@ -361,8 +361,6 @@ void DMXSerialClass2::init(struct RDMINIT *initData, RDMCallbackFunction func, u
   _identifyMode = false;
   _softwareLabel = "Arduino RDM 1.0";
 
-  DeviceIDCpy(_devID, initData->deviceID);
-
   // read from EEPROM or set defaults
   for (unsigned int i = 0; i < sizeof(eeprom); i++)
     ((byte *)(&eeprom))[i] = EEPROM.read(i);
@@ -376,12 +374,17 @@ void DMXSerialClass2::init(struct RDMINIT *initData, RDMCallbackFunction func, u
     // set default values
     _startAddress = 1;
     strcpy (deviceLabel, "new");
+    _devID[2] = random255(); // random(255);
+    _devID[3] = random255(); // random(255);
     _devID[4] = random255(); // random(255);
     _devID[5] = random255(); // random(255);
   } // if 
 
-  // setup the manufacturer adressing device-ID
+  // override any EEPROM set values with the RDMINIT values
+  _devID[0] = _initData->manufacturerId >> sizeof(int8_t);  // MSB
+  _devID[1] = _initData->manufacturerId & 0xFF;             // LSB
 
+  // setup the manufacturer adressing device-ID
   _devIDGroup[0] = _devID[0];
   _devIDGroup[1] = _devID[1];
 
@@ -832,7 +835,7 @@ void DMXSerialClass2::_baseInit() {
   for (int n = 0; n < DMXSERIAL_MAX+1; n++)
     _dmxData[n] = 0;
     
-  pinMode(_dmxModePin, OUTPUT); // enables pin 2 for output to control data direction
+  pinMode(_dmxModePin, OUTPUT); // enables pin for output to control data direction
 } // _baseInit
 
 
@@ -1064,7 +1067,6 @@ void respondMessage(boolean isHandled, uint16_t nackReason)
 
 // generate a random number 0..255
 int random255() {
-	return 0;
   int num = 0;
   for (int i = 0; i<8; i++) {
      num |= (analogRead(A0) & 0x01) << i;

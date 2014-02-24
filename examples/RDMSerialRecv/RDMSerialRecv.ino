@@ -55,23 +55,19 @@ void rgb(byte r, byte g, byte b)
 } // rgb()
 
 // see DMXSerial2.h for the definition of the fields of this structure
-const uint16_t my_pids[] = {E120_DEVICE_HOURS, E120_LAMP_HOURS};
+uint16_t my_pids[] = {E120_DEVICE_HOURS, 
+                      E120_LAMP_HOURS};
+
 struct RDMINIT rdmInit = {
-  "mathertel.de", // Manufacturer Label
-  1, // Device Model ID
+  0x0987,               // Manufacturer ID, Change this to your manufacturer ID. Get a manufacturer ID at http://tsp.plasa.org/tsp/working_groups/CP/mfctrIDs.php
+  "mathertel.de",       // Manufacturer Label
+  1,                    // Device Model ID
   "Arduino RDM Device", // Device Model Label
-  3, // footprint
-  (sizeof(my_pids)/sizeof(uint16_t)), my_pids,
-  {
-     0x09, // Manufacturer ID, first byte. Change this to your manufacturer ID.
-     0x87, // Manufacturer ID, second byte. Get a manufacturer ID at http://tsp.plasa.org/tsp/working_groups/CP/mfctrIDs.php
-     0x20, // The following 4 bytes are your device ID. Note that the last two bytes will be randomized by the library if no
-     0x12, // valid EEPROM entry is found. This ensures some kind of randomness. You can always set your static device ID
-     0x00, // by setting it manually in the EEPROM (sorry, no nifty method yet)
-     0x00
-   },
-   E120_PRODUCT_CATEGORY_DIMMER_CS_LED, // Product Category, see rdm.h for all available defines
-   0x01000000 // Software Version
+  0x01000000,           // Software Version
+  E120_PRODUCT_CATEGORY_DIMMER_CS_LED, // Product Category, see rdm.h for all available defines
+  3,                    // footprint
+  (sizeof(my_pids)/sizeof(uint16_t)), 
+  my_pids
 };
 
 

@@ -98,17 +98,15 @@ struct RDMPERSONALITY {
 
 
 struct RDMINIT {
-  char          *manufacturerLabel; //
-  const uint16_t          deviceModelId;       //
-  char          *deviceModel;       //
-  uint16_t footprint;
-  // uint16_t personalityCount;
-  // RDMPERSONALITY *personalities;
-  const uint16_t        additionalCommandsLength;
-  const uint16_t       *additionalCommands;
-  DEVICEID deviceID;
-  uint16_t productCategory;
-  uint32_t softwareVersion;
+  uint16_t         manufacturerId;
+  char            *manufacturerLabel;
+  uint16_t         deviceModelId;
+  char            *deviceModel;
+  uint32_t         softwareVersion;
+  uint16_t         productCategory;
+  uint16_t         footprint;
+  uint16_t         additionalCommandsLength;
+  uint16_t        *additionalCommands;
 }; // struct RDMINIT
 
 struct PARAMETER_DESCRIPTION_RESPONSE {

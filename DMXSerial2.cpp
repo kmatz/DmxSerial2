@@ -373,7 +373,14 @@ void DMXSerialClass2::init(struct RDMINIT *initData, RDMCallbackFunction func, u
   } else {
     // set default values
     _startAddress = 1;
-    strcpy (deviceLabel, "new");
+
+    // descriptive default label
+    char label[sizeof(_initData->deviceModel)+5];
+    label[0] = 'New ';
+    strcat(label, _initData->deviceModel);
+    strcpy (deviceLabel, label);
+
+    // random DeviceID
     _devID[2] = random255(); // random(255);
     _devID[3] = random255(); // random(255);
     _devID[4] = random255(); // random(255);

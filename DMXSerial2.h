@@ -12,6 +12,7 @@
 // 22.01.2013 first published version to support RDM
 // 01.03.2013 finished some "TIMING" topics
 // 08.03.2013 finished as a library
+// 24.02.2014 Kevin Matz: add setDeviceID() to programaticly update the UID
 // - - - - -
 
 #ifndef DmxSerial_h

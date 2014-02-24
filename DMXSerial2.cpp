@@ -40,6 +40,7 @@
 // 24.01.2014 Peter Newman: More compliance with the OLA RDM Tests around sub devices and mute messages
 // 24.01.2014 Peter Newman/Sean Sill: Get device specific PIDs returning properly in supportedParameters
 // 24.01.2014 Peter Newman: Make the device specific PIDs compliant with the OLA RDM Tests. Add device model ID option
+// 24.02.2014 Kevin Matz: ADD: setDeviceID() to programaticly update the UID
 
 // - - - - -
 
@@ -197,7 +198,7 @@ unsigned long _timingReceiveEnd; // when the last incomming byte was received
 // current state of receiving or sending DMX/RDM Bytes
 typedef enum {
   IDLE,      // ignoring everything and wait for the next BREAK
-             // or a valid RDM packet arrived, need for processing !
+             //   or a valid RDM packet arrived, need for processing!
   BREAK,     // received a BREAK: now a new packet will start
   DMXDATA,   // receiving DMX data into the _dmxData buffer
   RDMDATA,   // receiving RDM data into the _rdm.buffer
@@ -209,10 +210,10 @@ typedef enum {
 
 // the special discovery response message
 struct DISCOVERYMSG {
-  byte headerFE[7];
-  byte headerAA;
-  byte maskedDevID[12];
-  byte checksum[4];  
+  byte headerFE[7];     // Response Preamble
+  byte headerAA;        // Preamble separator byte
+  byte maskedDevID[12]; // Encoded UID (EUID)
+  byte checksum[4];     // Encoded checksum
 }; // struct DISCOVERYMSG
 
 
@@ -527,14 +528,14 @@ void DMXSerialClass2::tick(void)
               
               // fill in the _rdm.discovery response structure
               for (byte i = 0; i < 7; i++)
-                disc->headerFE[i] = 0xFE;
-              disc->headerAA = 0xAA;  
-              for (byte i = 0; i < 6; i++) {
+                disc->headerFE[i] = 0xFE;     // Response Preamble
+              disc->headerAA = 0xAA;          // Preamble separator byte
+              for (byte i = 0; i < 6; i++) {  // Encoded UID (EUID)
                 disc->maskedDevID[i+i]   = _devID[i] | 0xAA;
                 disc->maskedDevID[i+i+1] = _devID[i] | 0x55;
                 _rdmCheckSum += _devID[i];
               }
-              disc->checksum[0] = (_rdmCheckSum >> 8)   | 0xAA;
+              disc->checksum[0] = (_rdmCheckSum >> 8)   | 0xAA; // encoded checksum
               disc->checksum[1] = (_rdmCheckSum >> 8)   | 0x55;
               disc->checksum[2] = (_rdmCheckSum & 0xFF) | 0xAA;
               disc->checksum[3] = (_rdmCheckSum & 0xFF) | 0x55;
@@ -1043,7 +1044,7 @@ void respondMessage(boolean isHandled, uint16_t nackReason)
     delayMicroseconds(190 - d);
 
   // send package by starting with a BREAK
-  UCSRnB = (1<<TXENn); // send without no interrupts !
+  UCSRnB = (1<<TXENn); // send without any interrupts !
 
   _DMXSerialBaud(Calcprescale(BREAKSPEED), BREAKFORMAT);
   digitalWrite(_dmxModePin, _dmxModeOut); // data Out direction

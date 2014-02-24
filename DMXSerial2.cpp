@@ -55,7 +55,7 @@
 #undef SCOPEDEBUG
 #ifdef SCOPEDEBUG
 #define DmxTriggerPin 4 // low spike at beginning of start byte
-#define DmxISRPin 3 // low during interrupt service routines
+#define DmxISRPin 3     // low during interrupt service routines
 #endif
 
 // ----- Timing, Testing, and Debugging helpers ----- 
@@ -235,11 +235,11 @@ struct DEVICEINFO {
 
 // This structure is defined for mapping the values into the EEPROM
 struct EEPROMVALUES {
-  byte sig1; // 0x6D  signature 1, EPROM values are valid of both signatures match.
-  byte sig2; // 0x68  signature 2
-  uint16_t startAddress; // the DMX start address can be changed by a RDM command.
+  byte sig1;              // 0x6D  signature 1, EPROM values are valid of both signatures match.
+  byte sig2;              // 0x68  signature 2
+  uint16_t startAddress;  // the DMX start address can be changed by a RDM command.
   char deviceLabel[DMXSERIAL_MAX_RDM_STRING_LENGTH+1]; // the device Label can be changed by a RDM command. +1 byte for the trailing null byte
-  DEVICEID deviceID;    // store the device ID to allow easy software updates.
+  DEVICEID deviceID;      // store the device ID to allow easy software updates.
 }; // struct EEPROMVALUES
 
 
@@ -362,7 +362,7 @@ void DMXSerialClass2::init(struct RDMINIT *initData, RDMCallbackFunction func, u
   _identifyMode = false;
   _softwareLabel = "Arduino RDM 1.0";
 
-  // read from EEPROM or set defaults
+  // read from EEPROM
   for (unsigned int i = 0; i < sizeof(eeprom); i++)
     ((byte *)(&eeprom))[i] = EEPROM.read(i);
 
@@ -465,10 +465,10 @@ void DMXSerialClass2::attachRDMCallback(RDMCallbackFunction newFunction)
 
 // some functions to hide the internal variables from beeing changed
 
-unsigned long DMXSerialClass2::noDataSince() { return(millis() - _gotLastPacket);}
-boolean DMXSerialClass2::isIdentifyMode() { return(_identifyMode); }
-uint16_t DMXSerialClass2::getStartAddress() { return(_startAddress); }
-uint16_t DMXSerialClass2::getFootprint() { return(_initData->footprint); }
+unsigned long DMXSerialClass2::noDataSince() { return(millis() - _gotLastPacket); }
+boolean DMXSerialClass2::isIdentifyMode()    { return(_identifyMode); }
+uint16_t DMXSerialClass2::getStartAddress()  { return(_startAddress); }
+uint16_t DMXSerialClass2::getFootprint()     { return(_initData->footprint); }
 
 
 // Handle RDM Requests and send response

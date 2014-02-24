@@ -21,13 +21,13 @@
 
 // ----- Constants -----
 
-#define DMXSERIAL_MAX 512 // max. number of supported DMX data channels
+#define DMXSERIAL_MAX 512                   // max. number of supported DMX data channels
 
-#define DMXSERIAL_MIN_SLOT_VALUE 0 // min. value a DMX512 slot can take
+#define DMXSERIAL_MIN_SLOT_VALUE 0          // min. value a DMX512 slot can take
 
-#define DMXSERIAL_MAX_SLOT_VALUE 255 // max. value a DMX512 slot can take
+#define DMXSERIAL_MAX_SLOT_VALUE 255        // max. value a DMX512 slot can take
 
-#define DMXSERIAL_MAX_RDM_STRING_LENGTH 32 // max. length of a string in RDM
+#define DMXSERIAL_MAX_RDM_STRING_LENGTH 32  // max. length of a string in RDM
 
 // ----- Enumerations -----
 
@@ -37,9 +37,9 @@ typedef uint8_t boolean;
 typedef uint8_t byte;
 
 
-// This is the definition for a unique DEVICE ID.
+// Format of a Unique ID (UID) per E1.20-5.1 
 // DEVICEID[0..1] ESTA Manufacturer ID
-// DEVICEID[2..5] unique number
+// DEVICEID[2..5] Device ID
 typedef byte DEVICEID[6];
 
 // ----- structures -----
@@ -47,20 +47,19 @@ typedef byte DEVICEID[6];
 // The RDMDATA structure (length = 24+data) is used by all GET/SET RDM commands.
 // The maximum permitted data length according to the spec is 231 bytes.
 struct RDMDATA {
-  byte     StartCode;    // Start Code 0xCC for RDM
-  byte     SubStartCode; // Start Code 0x01 for RDM
-  byte     Length;       // packet length
-  byte     DestID[6];
-  byte     SourceID[6];
-
-  byte     _TransNo;     // transaction number, not checked
-  byte     ResponseType;    // ResponseType
-  byte     _unknown;     // I don't know, ignore this
-  uint16_t SubDev;      // sub device number (root = 0) 
-  byte     CmdClass;     // command class
-  uint16_t Parameter;	   // parameter ID
-  byte     DataLength;   // parameter data length in bytes
-  byte     Data[231];   // data byte field
+  byte     StartCode;     // Start Code 0xCC for RDM
+  byte     SubStartCode;  // Start Code 0x01 for RDM
+  byte     Length;        // packet length
+  byte     DestID[6];     // UID of target
+  byte     SourceID[6];   // UID of sender
+  byte     _TransNo;      // transaction number, reply with same
+  byte     ResponseType;  // ResponseType
+  byte     _MessageCount; // unsent messages. Collected by the controller using GET:QUEUED_MESSAGE
+  uint16_t SubDev;        // sub device number (root = 0) 
+  byte     CmdClass;      // command class
+  uint16_t Parameter;	    // parameter ID
+  byte     DataLength;    // parameter data length in bytes
+  byte     Data[231];     // data byte field
 }; // struct RDMDATA
 
 
@@ -171,7 +170,8 @@ class DMXSerialClass2
     void _processRDMMessage(byte CmdClass, uint16_t Parameter, boolean isHandled);
 
     // save all data to EEPROM
-	void _saveEEPRom();
+	  void _saveEEPRom();
+
   private:
     // process a relevant message
     void _processRDMMessage(byte CmdClass, uint16_t Parameter, boolean isHandled, boolean doRespond);

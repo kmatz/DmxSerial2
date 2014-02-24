@@ -292,9 +292,10 @@ uint16_t _rdmCheckSum;
 // static data that is not needed externally so it is not put into the class definition.
 boolean _isMute;    // is set to true when RDM discovery command muted this device.
 
-uint8_t _dmxModePin = 2;
-uint8_t _dmxModeOut = HIGH;
-uint8_t _dmxModeIn = LOW;
+// DMX Rx/Tx mode hardware config.  Defaults from DMXSerial2.h: init()
+uint8_t _dmxModePin;  // 2
+uint8_t _dmxModeOut;  // HIGH
+uint8_t _dmxModeIn;   // LOW
 
 // ----- Macros -----
 

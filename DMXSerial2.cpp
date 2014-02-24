@@ -422,9 +422,16 @@ uint8_t DMXSerialClass2::read(int channel)
 } // read()
 
 
-// get the deviceID 
+// get the UID
 void DMXSerialClass2::getDeviceID (DEVICEID id) {
   DeviceIDCpy(id, _devID);
+} // getDeviceID()
+
+
+// set the UID
+void DMXSerialClass2::setDeviceID (DEVICEID id) {
+  DeviceIDCpy(_devID, id);
+  _saveEEPRom();
 } // getDeviceID()
 
 

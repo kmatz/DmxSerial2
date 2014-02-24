@@ -145,8 +145,11 @@ class DMXSerialClass2
     // Return true when identify mode was set on by controller.
     boolean isIdentifyMode();
 
-    // Returns the Device ID. Copies the UID to the buffer passed through the uid argument.
+    // Returns the UID. Copies the UID to the buffer passed through the uid argument.
     void getDeviceID(DEVICEID id);
+
+    // Set the UID. Copies the UID from the uid argument.
+    void setDeviceID(DEVICEID id);
 
     // Return the current DMX start address that is the first dmx address used by the device.
     uint16_t getStartAddress();

@@ -41,6 +41,7 @@
 // 24.01.2014 Peter Newman/Sean Sill: Get device specific PIDs returning properly in supportedParameters
 // 24.01.2014 Peter Newman: Make the device specific PIDs compliant with the OLA RDM Tests. Add device model ID option
 // 24.02.2014 Kevin Matz: ADD: setDeviceID() to programaticly update the UID
+// 26.02.2014 Kevin Matz: ADD: framwork for activity indicators
 
 // - - - - -
 
@@ -433,7 +434,7 @@ void DMXSerialClass2::getDeviceID (DEVICEID id) {
 void DMXSerialClass2::setDeviceID (DEVICEID id) {
   DeviceIDCpy(_devID, id);
   _saveEEPRom();
-} // getDeviceID()
+} // setDeviceID()
 
 
 // Read the current value of a channel, relative to the startAddress.
@@ -469,6 +470,27 @@ void DMXSerialClass2::attachRDMCallback(RDMCallbackFunction newFunction)
 {
   _rdmFunc = newFunction;
 } // attachRDMCallback
+
+
+// Register a self implemented function for DMX mode callbacks
+void DMXSerialClass2::attachDMXModeCallback(ActivityCallback newFunction)
+{
+  _dmxModeFunc = newFunction;
+} // attachDMXModeCallback
+
+
+// Register a self implemented function for DMX activity callbacks
+void DMXSerialClass2::attachDMXActivityCallback(ActivityCallback newFunction)
+{
+  _dmxActFunc = newFunction;
+} // attachDMXActivityCallback
+
+
+// Register a self implemented function for RDM activity callbacks
+void DMXSerialClass2::attachRDMActivityCallback(ActivityCallback newFunction)
+{
+  _rdmActFunc = newFunction;
+} // attachRDMActivityCallback
 
 
 // some functions to hide the internal variables from beeing changed

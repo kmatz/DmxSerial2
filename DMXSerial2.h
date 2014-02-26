@@ -13,6 +13,7 @@
 // 01.03.2013 finished some "TIMING" topics
 // 08.03.2013 finished as a library
 // 24.02.2014 Kevin Matz: add setDeviceID() to programaticly update the UID
+// 26.02.2014 Kevin Matz: framwork for activity indicators
 // - - - - -
 
 #ifndef DmxSerial_h
@@ -84,6 +85,7 @@ struct RDMDATA {
 
 extern "C" {
   typedef boolean (*RDMCallbackFunction)(struct RDMDATA *buffer, uint16_t *nackReason);
+  typedef void (*ActivityCallback)(boolean activity);
 }
 
 // ----- Library Class -----
@@ -161,6 +163,11 @@ class DMXSerialClass2
     // Register a device-specific implemented function for RDM callbacks
     void    attachRDMCallback (RDMCallbackFunction newFunction);
 
+    // Register a device-specific implemented function for activity indicator callbacks
+    void    attachDMXModeCallback (ActivityCallback newFunction);
+    void    attachDMXActivityCallback (ActivityCallback newFunction);
+    void    attachRDMActivityCallback (ActivityCallback newFunction);
+
     // check for unprocessed RDM Command.
     void    tick(void);
 
@@ -183,8 +190,11 @@ class DMXSerialClass2
     // common internal initialization function.
     void _baseInit();
 
-    // callback function to device specific code
+    // callback functions to device specific code
     RDMCallbackFunction _rdmFunc;
+    ActivityCallback _dmxModeFunc;
+    ActivityCallback _dmxActFunc;
+    ActivityCallback _rdmActFunc;
 
     // remember the given manufacturer label and device model strings during init
     struct RDMINIT *_initData;

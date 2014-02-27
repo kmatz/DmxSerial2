@@ -672,28 +672,32 @@ void DMXSerialClass2::_processRDMMessage(byte CmdClass, uint16_t Parameter, bool
       {
         if (CmdClass == E120_SET_COMMAND) { // 0x30
           if (_rdm.packet.DataLength != 1) {
-            // Oversized data
-            nackReason = E120_NR_FORMAT_ERROR;
-          } else if ((_rdm.packet.Data[0] != 0) && (_rdm.packet.Data[0] != 1)) {
-            // Out of range data
-            nackReason = E120_NR_DATA_OUT_OF_RANGE;
-          } else {
-            _identifyMode = _rdm.packet.Data[0] != 0;
-            _rdm.packet.DataLength = 0;
-            handled = true;
-          }
+            nackReason = E120_NR_FORMAT_ERROR;      // Oversized data
+            break;
+          } 
+          if ((_rdm.packet.Data[0] != 0) && (_rdm.packet.Data[0] != 1)) {
+            nackReason = E120_NR_DATA_OUT_OF_RANGE; // Out of range data
+            break;
+          } 
+
+          _identifyMode = _rdm.packet.Data[0] != 0;
+          _rdm.packet.DataLength = 0;
+          handled = true;
+          
         } else if (CmdClass == E120_GET_COMMAND) { // 0x20
           if (_rdm.packet.DataLength > 0) {
-            // Unexpected data
-            nackReason = E120_NR_FORMAT_ERROR;
-          } else if (_rdm.packet.SubDev != 0) {
-            // No sub-devices supported
-            nackReason = E120_NR_SUB_DEVICE_OUT_OF_RANGE;
-          } else {
-            _rdm.packet.Data[0] = _identifyMode;
-            _rdm.packet.DataLength = 1;
-            handled = true;
-          }
+            nackReason = E120_NR_FORMAT_ERROR;     // Unexpected data
+            break;
+          } 
+          if (_rdm.packet.SubDev != 0) {
+            nackReason = E120_NR_SUB_DEVICE_OUT_OF_RANGE; // No sub-devices supported
+            break;
+          } 
+
+          _rdm.packet.Data[0] = _identifyMode;
+          _rdm.packet.DataLength = 1;
+          handled = true;
+          
         }
       } // E120_IDENTIFY_DEVICE
         break;
@@ -702,30 +706,31 @@ void DMXSerialClass2::_processRDMMessage(byte CmdClass, uint16_t Parameter, bool
       {
         if (CmdClass == E120_GET_COMMAND) {
           if (_rdm.packet.DataLength > 0) {
-            // Unexpected data
-            nackReason = E120_NR_FORMAT_ERROR;
-          } else if (_rdm.packet.SubDev != 0) {
-            // No sub-devices supported
-            nackReason = E120_NR_SUB_DEVICE_OUT_OF_RANGE;
-          } else {
-            // return all device info data 
-            DEVICEINFO *devInfo = (DEVICEINFO *)(_rdm.packet.Data); // The data has to be responsed in the Data buffer.
+            nackReason = E120_NR_FORMAT_ERROR;            // Unexpected data
+            break;
+          } 
+          if (_rdm.packet.SubDev != 0) {
+            nackReason = E120_NR_SUB_DEVICE_OUT_OF_RANGE; // No sub-devices supported
+            break;
+          } 
 
-            devInfo->protocolMajor = 1;
-            devInfo->protocolMinor = 0;
-            devInfo->deviceModel = SWAPINT(_initData->deviceModelId);
-            devInfo->productCategory = SWAPINT(_initData->productCategory);
-            devInfo->softwareVersion = SWAPINT32(_initData->softwareVersion);
-            devInfo->footprint = SWAPINT(_initData->footprint);
-            devInfo->currentPersonality = 1;
-            devInfo->personalityCount = 1;
-            devInfo->startAddress = SWAPINT(_startAddress);
-            devInfo->subDeviceCount = 0;
-            devInfo->sensorCount = 0;
+          // return all device info data 
+          DEVICEINFO *devInfo = (DEVICEINFO *)(_rdm.packet.Data); // The data has to be responsed in the Data buffer.
 
-             _rdm.packet.DataLength = sizeof(DEVICEINFO);
-            handled = true;
-          }
+          devInfo->protocolMajor = 1;
+          devInfo->protocolMinor = 0;
+          devInfo->deviceModel = SWAPINT(_initData->deviceModelId);
+          devInfo->productCategory = SWAPINT(_initData->productCategory);
+          devInfo->softwareVersion = SWAPINT32(_initData->softwareVersion);
+          devInfo->footprint = SWAPINT(_initData->footprint);
+          devInfo->currentPersonality = 1;
+          devInfo->personalityCount = 1;
+          devInfo->startAddress = SWAPINT(_startAddress);
+          devInfo->subDeviceCount = 0;
+          devInfo->sensorCount = 0;
+
+           _rdm.packet.DataLength = sizeof(DEVICEINFO);
+          handled = true;
         } // if
       } // E120_DEVICE_INFO
         break;
@@ -734,17 +739,19 @@ void DMXSerialClass2::_processRDMMessage(byte CmdClass, uint16_t Parameter, bool
       {
         if (CmdClass == E120_GET_COMMAND) {
           if (_rdm.packet.DataLength > 0) {
-            // Unexpected data
-            nackReason = E120_NR_FORMAT_ERROR;
-          } else if (_rdm.packet.SubDev != 0) {
-            // No sub-devices supported
-            nackReason = E120_NR_SUB_DEVICE_OUT_OF_RANGE;
-          } else {
-            // return the manufacturer label
-            _rdm.packet.DataLength = strlen(_initData->manufacturerLabel);
-            memcpy(_rdm.packet.Data, _initData->manufacturerLabel, _rdm.packet.DataLength);
-            handled = true;
-          }
+            nackReason = E120_NR_FORMAT_ERROR;  // Unexpected data
+            break;
+          } 
+          if (_rdm.packet.SubDev != 0) {
+            nackReason = E120_NR_SUB_DEVICE_OUT_OF_RANGE; // No sub-devices supported
+            break;
+          } 
+
+          // return the manufacturer label
+          _rdm.packet.DataLength = strlen(_initData->manufacturerLabel);
+          memcpy(_rdm.packet.Data, _initData->manufacturerLabel, _rdm.packet.DataLength);
+          handled = true;
+          
         }
       } // E120_MANUFACTURER_LABEL
         break;
@@ -753,17 +760,19 @@ void DMXSerialClass2::_processRDMMessage(byte CmdClass, uint16_t Parameter, bool
       {
         if (CmdClass == E120_GET_COMMAND) {
           if (_rdm.packet.DataLength > 0) {
-            // Unexpected data
-            nackReason = E120_NR_FORMAT_ERROR;
-          } else if (_rdm.packet.SubDev != 0) {
-            // No sub-devices supported
-            nackReason = E120_NR_SUB_DEVICE_OUT_OF_RANGE;
-          } else {
-            // return the DEVICE MODEL DESCRIPTION
-            _rdm.packet.DataLength = strlen(_initData->deviceModel);
-            memcpy(_rdm.packet.Data, _initData->deviceModel, _rdm.packet.DataLength);
-            handled = true;
-          }
+            nackReason = E120_NR_FORMAT_ERROR;  // Unexpected data
+            break;
+          } 
+          if (_rdm.packet.SubDev != 0) {
+            nackReason = E120_NR_SUB_DEVICE_OUT_OF_RANGE; // No sub-devices supported
+            break;
+          } 
+
+          // return the DEVICE MODEL DESCRIPTION
+          _rdm.packet.DataLength = strlen(_initData->deviceModel);
+          memcpy(_rdm.packet.Data, _initData->deviceModel, _rdm.packet.DataLength);
+          handled = true;
+          
         }
       } // E120_DEVICE_MODEL_DESCRIPTION
         break;
@@ -772,28 +781,31 @@ void DMXSerialClass2::_processRDMMessage(byte CmdClass, uint16_t Parameter, bool
       {
         if (CmdClass == E120_SET_COMMAND) {
           if (_rdm.packet.DataLength > DMXSERIAL_MAX_RDM_STRING_LENGTH) {
-            // Oversized data
-            nackReason = E120_NR_FORMAT_ERROR;
-          } else {
-            memcpy(deviceLabel, _rdm.packet.Data, _rdm.packet.DataLength);
-            deviceLabel[_rdm.packet.DataLength] = '\0';
-            _rdm.packet.DataLength = 0;
-            // persist in EEPROM
-            _saveEEPRom();
-            handled = true;
-          }
+            nackReason = E120_NR_FORMAT_ERROR;  // Oversized data
+            break;
+          } 
+
+          memcpy(deviceLabel, _rdm.packet.Data, _rdm.packet.DataLength);
+          deviceLabel[_rdm.packet.DataLength] = '\0';
+          _rdm.packet.DataLength = 0;
+          // persist in EEPROM
+          _saveEEPRom();
+          handled = true;
+          
         } else if (CmdClass == E120_GET_COMMAND) {
           if (_rdm.packet.DataLength > 0) {
-            // Unexpected data
-            nackReason = E120_NR_FORMAT_ERROR;
-          } else if (_rdm.packet.SubDev != 0) {
-            // No sub-devices supported
-            nackReason = E120_NR_SUB_DEVICE_OUT_OF_RANGE;
-          } else {
-            _rdm.packet.DataLength = strlen(deviceLabel);
-            memcpy(_rdm.packet.Data, deviceLabel, _rdm.packet.DataLength);
-            handled = true;
+            nackReason = E120_NR_FORMAT_ERROR;  // Unexpected data
+            break;
           }
+          if (_rdm.packet.SubDev != 0) { 
+            nackReason = E120_NR_SUB_DEVICE_OUT_OF_RANGE; // No sub-devices supported
+            break;
+          } 
+
+          _rdm.packet.DataLength = strlen(deviceLabel);
+          memcpy(_rdm.packet.Data, deviceLabel, _rdm.packet.DataLength);
+          handled = true;
+          
         } // if
       } // E120_DEVICE_LABEL
         break;
@@ -802,17 +814,19 @@ void DMXSerialClass2::_processRDMMessage(byte CmdClass, uint16_t Parameter, bool
       {
         if (CmdClass == E120_GET_COMMAND) {
           if (_rdm.packet.DataLength > 0) {
-            // Unexpected data
-            nackReason = E120_NR_FORMAT_ERROR;
-          } else if (_rdm.packet.SubDev != 0) {
-            // No sub-devices supported
-            nackReason = E120_NR_SUB_DEVICE_OUT_OF_RANGE;
-          } else {
-            // return the SOFTWARE_VERSION_LABEL
-            _rdm.packet.DataLength = strlen(_softwareLabel);
-            memcpy(_rdm.packet.Data, _softwareLabel, _rdm.packet.DataLength);
-            handled = true;
-          }
+            nackReason = E120_NR_FORMAT_ERROR;  // Unexpected data
+            break;
+          } 
+          if (_rdm.packet.SubDev != 0) {
+            nackReason = E120_NR_SUB_DEVICE_OUT_OF_RANGE; // No sub-devices supported
+            break;
+          } 
+
+          // return the SOFTWARE_VERSION_LABEL
+          _rdm.packet.DataLength = strlen(_softwareLabel);
+          memcpy(_rdm.packet.Data, _softwareLabel, _rdm.packet.DataLength);
+          handled = true;
+          
         }
       } // E120_SOFTWARE_VERSION_LABEL
         break;
@@ -821,34 +835,39 @@ void DMXSerialClass2::_processRDMMessage(byte CmdClass, uint16_t Parameter, bool
       {
         if (CmdClass == E120_SET_COMMAND) {
           if (_rdm.packet.DataLength != 2) {
-            // Oversized data
-            nackReason = E120_NR_FORMAT_ERROR;
-          } else {
-            uint16_t newStartAddress = READINT(_rdm.packet.Data);
-            if ((newStartAddress <= 0) || (newStartAddress > DMXSERIAL_MAX)) {
-              // Out of range start address
-              // TODO(Peter): Should it be newStartAddress less footprint?
-              nackReason = E120_NR_DATA_OUT_OF_RANGE;
-            } else {
-              _startAddress = newStartAddress;
-              _rdm.packet.DataLength = 0;
-              // persist in EEPROM
-              _saveEEPRom();
-              handled = true;
-            }
-          }
+            nackReason = E120_NR_FORMAT_ERROR;  // Oversized data
+            break;
+          } 
+
+          uint16_t newStartAddress = READINT(_rdm.packet.Data);
+          if ((newStartAddress <= 0) || (newStartAddress > DMXSERIAL_MAX)) {
+            // Out of range start address
+            // TODO(Peter): Should it be newStartAddress less footprint?
+            nackReason = E120_NR_DATA_OUT_OF_RANGE;
+            break;
+          } 
+
+          _startAddress = newStartAddress;
+          _rdm.packet.DataLength = 0;
+          // persist in EEPROM
+          _saveEEPRom();
+          handled = true;
+          
+          
         } else if (CmdClass == E120_GET_COMMAND) {
           if (_rdm.packet.DataLength > 0) {
-            // Unexpected data
-            nackReason = E120_NR_FORMAT_ERROR;
-          } else if (_rdm.packet.SubDev != 0) {
-            // No sub-devices supported
-            nackReason = E120_NR_SUB_DEVICE_OUT_OF_RANGE;
-          } else {
-            WRITEINT(_rdm.packet.Data, _startAddress);
-            _rdm.packet.DataLength = 2;
-            handled = true;
-          }
+            nackReason = E120_NR_FORMAT_ERROR;  // Unexpected data
+            break;
+          } 
+          if (_rdm.packet.SubDev != 0) {
+            nackReason = E120_NR_SUB_DEVICE_OUT_OF_RANGE; // No sub-devices supported
+            break;
+          } 
+
+          WRITEINT(_rdm.packet.Data, _startAddress);
+          _rdm.packet.DataLength = 2;
+          handled = true;
+          
         } // if
       } // E120_DMX_START_ADDRESS
         break;
@@ -857,30 +876,32 @@ void DMXSerialClass2::_processRDMMessage(byte CmdClass, uint16_t Parameter, bool
       {
         if (CmdClass == E120_GET_COMMAND) {
           if (_rdm.packet.DataLength > 0) {
-            // Unexpected data
-            nackReason = E120_NR_FORMAT_ERROR;
-          } else if (_rdm.packet.SubDev != 0) {
-            // No sub-devices supported
-            nackReason = E120_NR_SUB_DEVICE_OUT_OF_RANGE;
-          } else {
-            // Some supported PIDs shouldn't be returned as per the standard, these are:
-            // E120_DISC_UNIQUE_BRANCH
-            // E120_DISC_MUTE
-            // E120_DISC_UN_MUTE
-            // E120_SUPPORTED_PARAMETERS
-            // E120_IDENTIFY_DEVICE
-            // E120_DEVICE_INFO
-            // E120_DMX_START_ADDRESS
-            // E120_SOFTWARE_VERSION_LABEL
-            _rdm.packet.DataLength = 2 * (3 + _initData->additionalCommandsLength);
-            WRITEINT(_rdm.packet.Data   , E120_MANUFACTURER_LABEL);
-            WRITEINT(_rdm.packet.Data+ 2, E120_DEVICE_MODEL_DESCRIPTION);
-            WRITEINT(_rdm.packet.Data+ 4, E120_DEVICE_LABEL);
-            for (int n = 0; n < _initData->additionalCommandsLength; n++) {
-              WRITEINT(_rdm.packet.Data+6+n+n, _initData->additionalCommands[n]);
-            }
-            handled = true;
+            nackReason = E120_NR_FORMAT_ERROR;    // Unexpected data
+            break;
+          } 
+          if (_rdm.packet.SubDev != 0) {
+            nackReason = E120_NR_SUB_DEVICE_OUT_OF_RANGE; // No sub-devices supported
+            break;
+          } 
+
+          // Some supported PIDs shouldn't be returned as per the standard, these are:
+          // E120_DISC_UNIQUE_BRANCH
+          // E120_DISC_MUTE
+          // E120_DISC_UN_MUTE
+          // E120_SUPPORTED_PARAMETERS
+          // E120_IDENTIFY_DEVICE
+          // E120_DEVICE_INFO
+          // E120_DMX_START_ADDRESS
+          // E120_SOFTWARE_VERSION_LABEL
+          _rdm.packet.DataLength = 2 * (3 + _initData->additionalCommandsLength);
+          WRITEINT(_rdm.packet.Data   , E120_MANUFACTURER_LABEL);
+          WRITEINT(_rdm.packet.Data+ 2, E120_DEVICE_MODEL_DESCRIPTION);
+          WRITEINT(_rdm.packet.Data+ 4, E120_DEVICE_LABEL);
+          for (int n = 0; n < _initData->additionalCommandsLength; n++) {
+            WRITEINT(_rdm.packet.Data+6+n+n, _initData->additionalCommands[n]);
           }
+          handled = true;
+          
         } else if (CmdClass == E120_SET_COMMAND) {
           // Unexpected set
           nackReason = E120_NR_UNSUPPORTED_COMMAND_CLASS;

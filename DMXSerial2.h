@@ -178,7 +178,7 @@ class DMXSerialClass2
     char deviceLabel[DMXSERIAL_MAX_RDM_STRING_LENGTH+1];
 
     // don't use that method from extern.
-    void _processRDMMessage(byte CmdClass, uint16_t Parameter, boolean isHandled);
+    void _processRDMMessage();
 
     // save all data to EEPROM
 	  void _saveEEPRom();

@@ -10,6 +10,7 @@
 // IMPORTANT NOTE: Even when I name by implementation RDM, it is not a full compliant RDM
 // implementation. Right now it is only a experimental version with regards of the published second hand 
 // information about RDM available on the internet for free. (see links inside the code)
+// The RDM standard (E1.20), as well as DMX (E1.11), are now available for FREE from http://tsp.plasa.org
 //
 // 25.07.2011 creation of the DMXSerial library.
 // 10.09.2011 fully control the serial hardware register

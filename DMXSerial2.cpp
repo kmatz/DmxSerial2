@@ -300,6 +300,12 @@ uint8_t _dmxModePin;  // 2
 uint8_t _dmxModeOut;  // HIGH
 uint8_t _dmxModeIn;   // LOW
 
+// callback functions to device specific code
+ActivityCallback _dmxModeFunc;
+ActivityCallback _dmxActFunc;
+ActivityCallback _rdmActFunc;
+
+
 // ----- Macros -----
 
 // calculate prescaler from baud rate and cpu clock rate at compile time
@@ -930,81 +936,103 @@ void _DMXSerialWriteByte(uint8_t data)
 ISR(USARTn_RX_vect)
 {
   //  digitalWrite(rxStatusPin, HIGH);
-  uint8_t  USARTstate= UCSRnA;    //get state before data!
-  uint8_t  DmxByte   = UDRn;      //get data
-  uint8_t  DmxState  = _dmxState; //just load once from SRAM to increase speed
+  uint8_t  USARTstate= UCSRnA;    // get state before data!
+  uint8_t  DmxByte   = UDRn;      // get data
 
-  if (USARTstate & (1<<FEn)) { //check for break
-    _dmxState = BREAK; // break condition detected.
-    _dmxPos= 0;        // The next data byte is the start byte
+  if (USARTstate & (1<<FEn)) {    // check for break
+    _dmxState = BREAK;            // break condition detected.
+    _dmxPos= 0;                   // The next data byte is the start byte
+    return;
+  } 
 
-  } else if (DmxState == IDLE) {
-    // wait on...
-    
-  } else if (DmxState == BREAK) {
-    if (DmxByte == 0) {
-      _dmxState = DMXDATA; // DMX data start code detected
-      // _dmxData[_dmxPos++] = DmxByte;  // store in DMX buffer
-      _dmxPos = 1;
-      _gotLastPacket = millis(); // remember current (relative) time in msecs.
-      _dmxActFunc(true);         // set DMX activity indicator
-      
-    } else if (DmxByte == E120_SC_RDM) {
-      _dmxState = RDMDATA;  // RDM command start code
-      _rdm.buffer[_dmxPos++] = DmxByte;  // store in RDM buffer (in StartCode)
-      _rdmCheckSum = DmxByte;
-      _rdmActFunc(true);                 // set RDM activity indicator
+  switch (_dmxState)
+  {
+    case IDLE:
+      break;  // do nothing
 
-    } else {
-      // This might be a non RDM command -> not implemented so wait for next BREAK !
-      _dmxState= IDLE;
-    } // if
-    
-  } else if (DmxState == DMXDATA) {
-    // another DMX byte
-    _dmxData[_dmxPos++]= DmxByte;  // store received data into DMX data buffer.
+    case BREAK:
+    {
+      switch (DmxByte)
+      {
+        case 0:             // DMX data NULL start code
+        {
+          _dmxState = DMXDATA;        
+          // _dmxData[_dmxPos++] = DmxByte;  // store in DMX buffer
+          _dmxPos = 1;
+          _gotLastPacket = millis(); // remember current (relative) time in msecs.
+          _dmxActFunc(true);         // set DMX activity indicator
+        } // 0
 
-    if (_dmxPos > DMXSERIAL_MAX) { // all channels done.
-      _dmxState = IDLE; // wait for next break
-      _dmxActFunc(false);          // no additional DMX activity
-    } // if
-   
-  } else if (DmxState == RDMDATA) {
-    // another RDM byte
-    if (_dmxPos >= (int)sizeof(_rdm.buffer)) {
-      // too much data ... 
-      _dmxState = IDLE; // wait for next break
-    } else {
-      _rdm.buffer[_dmxPos++] = DmxByte;
-      _rdmCheckSum += DmxByte;
+        case E120_SC_RDM:   // RDM command start code
+        {
+          _dmxState = RDMDATA;               
+          _rdm.buffer[_dmxPos++] = DmxByte;  // store in RDM buffer (in StartCode)
+          _rdmCheckSum = DmxByte;
+          _rdmActFunc(true);                 // set RDM activity indicator
+        } // E120_SC_RDM
 
-      if (_dmxPos == _rdm.packet.Length) {
-        // all data received. Now getting checksum !
-        _dmxState = CHECKSUMH; // wait for checksum High Byte
+        default:            // unsupported start code
+          _dmxState= IDLE;  // wait for next break
+          break;
+      } // DmxByte
+
+      break;
+    } // BREAK
+
+    case DMXDATA:         // another DMX byte
+    {    
+      _dmxData[_dmxPos++]= DmxByte;  // store received data into DMX data buffer.
+
+      if (_dmxPos > DMXSERIAL_MAX) { // all channels done.
+        _dmxState = IDLE;            // wait for next break
+        _dmxActFunc(false);          // no additional DMX activity
       } // if
-    } // if
+      break;
+    } // DMXDATA
 
-  } else if (DmxState == CHECKSUMH) {
-    // High byte of RDM checksum -> subtract from checksum
-    _rdmCheckSum -= DmxByte << 8;
-    _dmxState = CHECKSUML;
+    case RDMDATA:         // another RDM byte
+    {
+      if (_dmxPos >= (int)sizeof(_rdm.buffer)) {
+        // too much data ... 
+        _dmxState = IDLE; // wait for next break
+      } else {
+        _rdm.buffer[_dmxPos++] = DmxByte;
+        _rdmCheckSum += DmxByte;
 
-  } else if (DmxState == CHECKSUML) {
-    // Low byte of RDM checksum -> subtract from checksum
-    _rdmCheckSum -= DmxByte;
+        if (_dmxPos == _rdm.packet.Length) {
+          // all data received. Now getting checksum !
+          _dmxState = CHECKSUMH; // wait for checksum High Byte
+        } // if
+      } // if
+      break;
+    } // RDMDATA
 
-    // now check some error conditions and adressing issues
-    if ((_rdmCheckSum == 0) && (_rdm.packet.SubStartCode == E120_SC_SUB_MESSAGE)) { // 0x01
-      // prepare for answering when tick() is called
-      _rdmAvailable = true;
-      _gotLastPacket = millis(); // remember current (relative) time in msecs.
-      // TIMING: remember when the last byte was sent
-      _timingReceiveEnd = micros();
-    } // if
+    case CHECKSUMH:       // High byte of RDM checksum -> subtract from checksum
+    {
+      _rdmCheckSum -= DmxByte << 8;
+      _dmxState = CHECKSUML;
+      break;
+    } // CHECKSUMH
 
-    _dmxState = IDLE; // wait for next break or RDM package processing.
-    _rdmActFunc(false);         // no additional RDM activity.
-  } // if
+    case CHECKSUML:       // Low byte of RDM checksum -> subtract from checksum
+    {
+      _rdmCheckSum -= DmxByte;
+
+      // now check some error conditions and adressing issues
+      if ((_rdmCheckSum == 0) && (_rdm.packet.SubStartCode == E120_SC_SUB_MESSAGE)) { // 0x01
+        // prepare for answering when tick() is called
+        _rdmAvailable = true;
+        _gotLastPacket = millis(); // remember current (relative) time in msecs.
+        // TIMING: remember when the last byte was sent
+        _timingReceiveEnd = micros();
+      } // if
+
+      _dmxState = IDLE; // wait for next break or RDM package processing.
+      _rdmActFunc(false);         // no additional RDM activity.
+      break;
+    } // CHECKSUML
+
+  } // switch
 
 } // ISR(USART_RX_vect)
 

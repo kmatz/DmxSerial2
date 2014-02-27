@@ -192,9 +192,6 @@ class DMXSerialClass2
 
     // callback functions to device specific code
     RDMCallbackFunction _rdmFunc;
-    ActivityCallback _dmxModeFunc;
-    ActivityCallback _dmxActFunc;
-    ActivityCallback _rdmActFunc;
 
     // remember the given manufacturer label and device model strings during init
     struct RDMINIT *_initData;

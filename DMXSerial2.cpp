@@ -946,11 +946,13 @@ ISR(USARTn_RX_vect)
       // _dmxData[_dmxPos++] = DmxByte;  // store in DMX buffer
       _dmxPos = 1;
       _gotLastPacket = millis(); // remember current (relative) time in msecs.
+      _dmxActFunc(true);         // set DMX activity indicator
       
     } else if (DmxByte == E120_SC_RDM) {
       _dmxState = RDMDATA;  // RDM command start code
       _rdm.buffer[_dmxPos++] = DmxByte;  // store in RDM buffer (in StartCode)
       _rdmCheckSum = DmxByte;
+      _rdmActFunc(true);                 // set RDM activity indicator
 
     } else {
       // This might be a non RDM command -> not implemented so wait for next BREAK !
@@ -963,6 +965,7 @@ ISR(USARTn_RX_vect)
 
     if (_dmxPos > DMXSERIAL_MAX) { // all channels done.
       _dmxState = IDLE; // wait for next break
+      _dmxActFunc(false);          // no additional DMX activity
     } // if
    
   } else if (DmxState == RDMDATA) {
@@ -999,6 +1002,7 @@ ISR(USARTn_RX_vect)
     } // if
 
     _dmxState = IDLE; // wait for next break or RDM package processing.
+    _rdmActFunc(false);         // no additional RDM activity.
   } // if
 
 } // ISR(USART_RX_vect)

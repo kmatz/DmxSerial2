@@ -86,6 +86,9 @@ void setup () {
   // There are several constants that have to be passed to the library so it can reposonse to the
   // corresponding commands for itself.
   DMXSerial2.init(&rdmInit, processCommand);
+  DMXSerial2.attachDMXModeCallback(modeIndicator);
+  DMXSerial2.attachDMXActivityCallback(activityIndicator);
+  DMXSerial2.attachRDMActivityCallback(activityIndicator);
 
   uint16_t start = DMXSerial2.getStartAddress();
 #if defined(SERIAL_DEBUG)
@@ -212,6 +215,18 @@ boolean processCommand(struct RDMDATA *rdm, uint16_t *nackReason)
   
   return handled;
 } // processCommand
+
+// This function is registered to DMXSerial2 in setup().
+// Here device specific activity lights are implimented.
+void activityIndicator(boolean enable) {
+  
+} // activityIndicator
+
+// This function is registered to DMXSerial2 in setup().
+// Here device specific mode indicators are implimented.
+void modeIndicator(boolean enable) {
+  
+} // modeIndicator
 
 
 // End.

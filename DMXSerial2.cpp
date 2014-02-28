@@ -344,6 +344,7 @@ void _DMXSerialBaud(uint16_t baud_setting, uint8_t format);
 void _DMXSerialWriteByte(uint8_t data);
 
 void respondMessage(boolean isHandled, uint16_t nackReason = E120_NR_UNKNOWN_PID);
+void respondDiscovery();
 int random255();
 
 // ----- Class implementation -----
@@ -543,7 +544,7 @@ void DMXSerialClass2::_processRDMMessage()
   uint16_t nackReason = E120_NR_UNKNOWN_PID;
 
   boolean handled          = false;
-  boolean doRespond        = false;
+  boolean packetIsForMe    = false;
 
   struct RDMDATA *rdm = &_rdm.packet;
   
@@ -558,7 +559,7 @@ void DMXSerialClass2::_processRDMMessage()
       }
     }
   } else {              // for me 
-    doRespond = true;
+    packetIsForMe = true;
   }
 
   // Device Discovery
@@ -569,86 +570,39 @@ void DMXSerialClass2::_processRDMMessage()
       {
         if (_isMute)
           break; 
-
-        // rdm->Length must be 24+6+6 = 36
-        if (rdm->Length != 36)
+        
+        if (rdm->Length < 36)  // rdm->Length must be 24+6+6 = 36
           break;
 
-        // rdm->_DataLength must be 6+6 = 12
-        if (rdm->_DataLength != 12)
+        if (rdm->DataLength < 12)  // rdm->_DataLength must be 6+6 = 12
           break;
         
         // check if my _devID is in the discovery range
         if ((DeviceIDCmp(rdm->Data, _devID) <= 0) && (DeviceIDCmp(_devID, rdm->Data+6) <= 0)) {
-          
-          // respond a special discovery message !
-          struct DISCOVERYMSG *disc = &_rdm.discovery;
-          _rdmCheckSum = 6 * 0xFF;
-          
-          // fill in the _rdm.discovery response structure
-          for (byte i = 0; i < 7; i++)
-            disc->headerFE[i] = 0xFE;     // Response Preamble
-          disc->headerAA = 0xAA;          // Preamble separator byte
-          for (byte i = 0; i < 6; i++) {  // Encoded UID (EUID)
-            disc->maskedDevID[i+i]   = _devID[i] | 0xAA;
-            disc->maskedDevID[i+i+1] = _devID[i] | 0x55;
-            _rdmCheckSum += _devID[i];
-          }
-          disc->checksum[0] = (_rdmCheckSum >> 8)   | 0xAA; // encoded checksum
-          disc->checksum[1] = (_rdmCheckSum >> 8)   | 0x55;
-          disc->checksum[2] = (_rdmCheckSum & 0xFF) | 0xAA;
-          disc->checksum[3] = (_rdmCheckSum & 0xFF) | 0x55;
-        
-          // disable all interrupt routines and send the _rdm.discovery packet 
-          // now send out the _rdm.buffer without a starting BREAK.
-          _DMXSerialBaud(Calcprescale(DMXSPEED), DMXFORMAT); 
-          UCSRnB = (1<<TXENn); // no interrupts !
-          
-          // delayMicroseconds(50);  // ??? 180
-          digitalWrite(_dmxModePin, _dmxModeOut); // data Out direction
-
-          unsigned int _rdmBufferLen = sizeof(_rdm.discovery);
-          for (unsigned int i = 0; i < _rdmBufferLen; i++) {
-            UDRn = _rdm.buffer[i];
-            UCSRnA= (1<<TXCn);
-            loop_until_bit_is_set(UCSRnA, TXCn);
-          } // for
-        
-          digitalWrite(_dmxModePin, _dmxModeIn); // data Out direction
-        
-          // Re-enable receiver and Receive interrupt
-          _dmxState= IDLE; // initial state
-          UCSRnB = (1<<RXENn) | (1<<RXCIEn);
-          _DMXSerialBaud(Calcprescale(DMXSPEED), DMXFORMAT); // Enable serial reception with a 250k rate
+          respondDiscovery();
         } // if
       } // E120_DISC_UNIQUE_BRANCH
         break;
 
       case SWAPINT(E120_DISC_UN_MUTE):
       {
-        handled = true;
-        if (packetIsForMe || packetIsForAll) { // 05.12.2013
-          if (_rdm.packet.DataLength > 0) {
-            // Unexpected data
-            // Do nothing
-          } else {
-            _isMute = false;
+        if (_rdm.packet.DataLength > 0) 
+          break;  // Unexpected data; do nothing
 
-            if (!packetIsForAll) {
-              // Control field
-              _rdm.packet.Data[0] = 0b00000000;
-              _rdm.packet.Data[1] = 0b00000000;
-              _rdm.packet.DataLength = 2;
-              respondMessage(true); // 21.11.2013
-            }
-          }
+        _isMute = false;
+
+        if (packetIsForMe) {
+          // Control field
+          _rdm.packet.Data[0] = 0b00000000;
+          _rdm.packet.Data[1] = 0b00000000;
+          _rdm.packet.DataLength = 2;
+          respondMessage(true); // 21.11.2013
         }
       } // E120_DISC_UN_MUTE
         break;
 
       case SWAPINT(E120_DISC_MUTE):
       {
-        handled = true;
         if (! packetIsForMe)
           break;
 
@@ -656,6 +610,7 @@ void DMXSerialClass2::_processRDMMessage()
           break; // Unexpected data; do nothing.
 
         _isMute = true;
+
         // Control field
         _rdm.packet.Data[0] = 0b00000000;
         _rdm.packet.Data[1] = 0b00000000;
@@ -927,7 +882,7 @@ void DMXSerialClass2::_processRDMMessage()
       break;
   } // switch
 
-  if (doRespond)
+  if (packetIsForMe)
     respondMessage(handled, nackReason);
 
 } // _processRDMMessage
@@ -1150,7 +1105,7 @@ void respondMessage(boolean isHandled, uint16_t nackReason)
   DeviceIDCpy(_rdm.packet.DestID, _rdm.packet.SourceID);
   DeviceIDCpy(_rdm.packet.SourceID, _devID);
 
-  _rdm.packet.CmdClass++;
+  _rdm.packet.CmdClass++; // set CmdClass to responce type
   // Parameter
 
   // prepare buffer and Checksum
@@ -1201,6 +1156,48 @@ void respondMessage(boolean isHandled, uint16_t nackReason)
   _DMXSerialBaud(Calcprescale(DMXSPEED), DMXFORMAT); // Enable serial reception with a 250k rate
 } // respondMessage
 
+void respondDiscovery()
+{
+  // respond a special discovery message !
+  struct DISCOVERYMSG *disc = &_rdm.discovery;
+  _rdmCheckSum = 6 * 0xFF;
+  
+  // fill in the _rdm.discovery response structure
+  for (byte i = 0; i < 7; i++)
+    disc->headerFE[i] = 0xFE;     // Response Preamble
+  disc->headerAA = 0xAA;          // Preamble separator byte
+  for (byte i = 0; i < 6; i++) {  // Encoded UID (EUID)
+    disc->maskedDevID[i+i]   = _devID[i] | 0xAA;
+    disc->maskedDevID[i+i+1] = _devID[i] | 0x55;
+    _rdmCheckSum += _devID[i];
+  }
+  disc->checksum[0] = (_rdmCheckSum >> 8)   | 0xAA; // encoded checksum
+  disc->checksum[1] = (_rdmCheckSum >> 8)   | 0x55;
+  disc->checksum[2] = (_rdmCheckSum & 0xFF) | 0xAA;
+  disc->checksum[3] = (_rdmCheckSum & 0xFF) | 0x55;
+  
+  // disable all interrupt routines and send the _rdm.discovery packet 
+  // now send out the _rdm.buffer without a starting BREAK.
+  _DMXSerialBaud(Calcprescale(DMXSPEED), DMXFORMAT); 
+  UCSRnB = (1<<TXENn); // no interrupts !
+  
+  // delayMicroseconds(50);  // ??? 180
+  digitalWrite(_dmxModePin, _dmxModeOut); // data Out direction
+
+  unsigned int _rdmBufferLen = sizeof(_rdm.discovery);
+  for (unsigned int i = 0; i < _rdmBufferLen; i++) {
+    UDRn = _rdm.buffer[i];
+    UCSRnA= (1<<TXCn);
+    loop_until_bit_is_set(UCSRnA, TXCn);
+  } // for
+  
+  digitalWrite(_dmxModePin, _dmxModeIn); // data Out direction
+  
+  // Re-enable receiver and Receive interrupt
+  _dmxState= IDLE; // initial state
+  UCSRnB = (1<<RXENn) | (1<<RXCIEn);
+  _DMXSerialBaud(Calcprescale(DMXSPEED), DMXFORMAT); // Enable serial reception with a 250k rate
+}
 
 // generate a random number 0..255
 int random255() {

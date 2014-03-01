@@ -640,6 +640,33 @@ void DMXSerialClass2::_processRDMMessage()
   // handle non-discovery RDM
   switch (Parameter)
   {
+    case SWAPINT(E120_DEVICE_INFO):
+    {
+      if (CmdClass != E120_GET_COMMAND) {
+        respondMessage(false, E120_NR_UNSUPPORTED_COMMAND_CLASS); // Unexpected set
+        break;
+      } 
+
+      // return all device info data 
+      DEVICEINFO *devInfo = (DEVICEINFO *)(_rdm.packet.Data); // The data has to be responsed in the Data buffer.
+
+      devInfo->protocolMajor = 1;
+      devInfo->protocolMinor = 0;
+      devInfo->deviceModel = SWAPINT(_initData->deviceModelId);
+      devInfo->productCategory = SWAPINT(_initData->productCategory);
+      devInfo->softwareVersion = SWAPINT32(_initData->softwareVersion);
+      devInfo->footprint = SWAPINT(_initData->footprint);
+      devInfo->currentPersonality = 1;
+      devInfo->personalityCount = 1;
+      devInfo->startAddress = SWAPINT(_startAddress);
+      devInfo->subDeviceCount = 0;
+      devInfo->sensorCount = 0;
+
+      _rdm.packet.DataLength = sizeof(DEVICEINFO);
+      respondMessage(true);
+    } // E120_DEVICE_INFO
+      break;
+
     case SWAPINT(E120_SUPPORTED_PARAMETERS):
     {
       if (CmdClass != E120_GET_COMMAND) {
@@ -695,33 +722,6 @@ void DMXSerialClass2::_processRDMMessage()
         respondMessage(true);
       }
     } // E120_IDENTIFY_DEVICE
-      break;
-
-    case SWAPINT(E120_DEVICE_INFO):
-    {
-      if (CmdClass != E120_GET_COMMAND) {
-        respondMessage(false, E120_NR_UNSUPPORTED_COMMAND_CLASS); // Unexpected set
-        break;
-      } 
-
-      // return all device info data 
-      DEVICEINFO *devInfo = (DEVICEINFO *)(_rdm.packet.Data); // The data has to be responsed in the Data buffer.
-
-      devInfo->protocolMajor = 1;
-      devInfo->protocolMinor = 0;
-      devInfo->deviceModel = SWAPINT(_initData->deviceModelId);
-      devInfo->productCategory = SWAPINT(_initData->productCategory);
-      devInfo->softwareVersion = SWAPINT32(_initData->softwareVersion);
-      devInfo->footprint = SWAPINT(_initData->footprint);
-      devInfo->currentPersonality = 1;
-      devInfo->personalityCount = 1;
-      devInfo->startAddress = SWAPINT(_startAddress);
-      devInfo->subDeviceCount = 0;
-      devInfo->sensorCount = 0;
-
-       _rdm.packet.DataLength = sizeof(DEVICEINFO);
-      respondMessage(true);
-    } // E120_DEVICE_INFO
       break;
 
     case SWAPINT(E120_MANUFACTURER_LABEL):
@@ -795,6 +795,13 @@ void DMXSerialClass2::_processRDMMessage()
 
     case SWAPINT(E120_DMX_START_ADDRESS):
     {
+      // support not required if device has no DMXfootprint.
+      if (_initData->footprint == 0)
+      {
+        respondMessage(false, E120_NR_UNKNOWN_PID);  // Oversized data
+        break;
+      }
+
       if (CmdClass == E120_SET_COMMAND) {
         if (_rdm.packet.DataLength != 2) {
           respondMessage(false, E120_NR_FORMAT_ERROR);  // Oversized data

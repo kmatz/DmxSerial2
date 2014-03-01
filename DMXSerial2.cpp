@@ -48,6 +48,7 @@
 
 #include "Arduino.h"
 #include <EEPROM.h>
+#include <avr/wdt.h>
 #include "DMXSerial2.h"
 
 #include <avr/interrupt.h>
@@ -1177,5 +1178,14 @@ int random255() {
   }
   return(num);
 } // random255()
+
+// reboot the Arduino
+void software_Reboot()
+{
+  wdt_enable(WDTO_15MS);
+  while(1)
+  {
+  }
+}
 
 // --- End of File ---

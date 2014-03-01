@@ -75,7 +75,6 @@ struct RDMINIT rdmInit = {
   0x01000000,           // Software Version
   E120_PRODUCT_CATEGORY_DIMMER_CS_LED, // Product Category, E1.20 Table A-5
   3,                    // DMX footprint
-  //(sizeof(supportedParameters)/sizeof(uint16_t)), 
   supportedParameters,
   productDetailIDList
 };

@@ -552,10 +552,10 @@ void DMXSerialClass2::_processRDMMessage()
   if (! DeviceIDCmp(rdm->DestID, _devID)        == 0) { // not for me
     if (! DeviceIDCmp(rdm->DestID, _devIDGroup) == 0) { // not for manufacturer
       if (! DeviceIDCmp(rdm->DestID, _devIDAll) == 0) { // not for all
-        return;         // ignore this packet
+        return; // ignore this packet
       }
     }
-  } else {              // for me 
+  } else { 
     packetIsForMe = true;
   }
 
@@ -817,11 +817,28 @@ void DMXSerialClass2::_processRDMMessage()
       WRITEINT(_rdm.packet.Data+ 4, E120_DEVICE_LABEL);
       WRITEINT(_rdm.packet.Data+ 6, E120_PRODUCT_DETAIL_ID_LIST);
       for (int n = 0; n < supportedParametersLength; n++) {
-        WRITEINT(_rdm.packet.Data+6+n+n, _initData->supportedParameters[n]);
+        WRITEINT(_rdm.packet.Data+8+n+n, _initData->supportedParameters[n]);
       }
       respondMessage(true);
 
-    } // E120_SUPPORTED_PARAMETERS
+    } // case E120_SUPPORTED_PARAMETERS
+      break;
+
+    case SWAPINT(E120_PRODUCT_DETAIL_ID_LIST):
+    { 
+      if (CmdClass != E120_GET_COMMAND) {
+        respondMessage(false, E120_NR_UNSUPPORTED_COMMAND_CLASS); // set not supported
+        break;
+      }
+
+      int productDetailIDListLength = sizeof(_initData->productDetailIDList)/sizeof(uint16_t);
+      for (int n = 0; n < productDetailIDListLength; n++) {
+        WRITEINT(_rdm.packet.Data+n+n, _initData->productDetailIDList[n]);
+      }
+      _rdm.packet.DataLength = 2 * (productDetailIDListLength);
+      respondMessage(true);
+
+    } // case E120_SUPPORTED_PARAMETERS
       break;
 
     default:
@@ -832,7 +849,6 @@ void DMXSerialClass2::_processRDMMessage()
     }
   } // switch
 } // _processRDMMessage
-
 
 // ----- internal functions and interrupt implementations ----- 
 

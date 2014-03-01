@@ -640,6 +640,37 @@ void DMXSerialClass2::_processRDMMessage()
   // handle non-discovery RDM
   switch (Parameter)
   {
+    case SWAPINT(E120_SUPPORTED_PARAMETERS):
+    {
+      if (CmdClass != E120_GET_COMMAND) {
+        respondMessage(false, E120_NR_UNSUPPORTED_COMMAND_CLASS); // Unexpected set
+        break;
+      }
+      
+      // RDM prameters of this implimentation, except as requred by the standard
+      // E1.20-10.4.1; Table A-3 "Required"
+      uint16_t RDMParameters[] = { E120_MANUFACTURER_LABEL,
+                                   E120_DEVICE_MODEL_DESCRIPTION,
+                                   E120_DEVICE_LABEL,
+                                   E120_PRODUCT_DETAIL_ID_LIST
+                                  };
+
+      int RDMParametersLength = sizeof(RDMParameters)/sizeof(uint16_t);
+      for (int n = 0; n < RDMParametersLength; n++) {
+        WRITEINT(_rdm.packet.Data+n+n, RDMParameters[n]);
+      }
+
+      int supportedParametersLength = sizeof(_initData->supportedParameters)/sizeof(uint16_t);
+      for (int n = 0; n < supportedParametersLength; n++) {
+        WRITEINT(_rdm.packet.Data+(RDMParametersLength*2)+n+n, _initData->supportedParameters[n]);
+      }
+
+      _rdm.packet.DataLength = 2 * (RDMParametersLength + supportedParametersLength);
+      respondMessage(true);
+
+    } // case E120_SUPPORTED_PARAMETERS
+      break;
+
     case SWAPINT(E120_IDENTIFY_DEVICE):
     {
       if (CmdClass == E120_SET_COMMAND) 
@@ -791,37 +822,6 @@ void DMXSerialClass2::_processRDMMessage()
         
       } // if
     } // E120_DMX_START_ADDRESS
-      break;
-
-    case SWAPINT(E120_SUPPORTED_PARAMETERS):
-    {
-      if (CmdClass != E120_GET_COMMAND) {
-        respondMessage(false, E120_NR_UNSUPPORTED_COMMAND_CLASS); // Unexpected set
-        break;
-      }
-
-      int supportedParametersLength = sizeof(_initData->supportedParameters)/sizeof(uint16_t);
-
-      // Some supported PIDs shouldn't be returned as per the standard, these are:
-      // E120_DISC_UNIQUE_BRANCH
-      // E120_DISC_MUTE
-      // E120_DISC_UN_MUTE
-      // E120_SUPPORTED_PARAMETERS
-      // E120_IDENTIFY_DEVICE
-      // E120_DEVICE_INFO
-      // E120_DMX_START_ADDRESS
-      // E120_SOFTWARE_VERSION_LABEL
-      _rdm.packet.DataLength = 2 * (4 + supportedParametersLength);
-      WRITEINT(_rdm.packet.Data   , E120_MANUFACTURER_LABEL);
-      WRITEINT(_rdm.packet.Data+ 2, E120_DEVICE_MODEL_DESCRIPTION);
-      WRITEINT(_rdm.packet.Data+ 4, E120_DEVICE_LABEL);
-      WRITEINT(_rdm.packet.Data+ 6, E120_PRODUCT_DETAIL_ID_LIST);
-      for (int n = 0; n < supportedParametersLength; n++) {
-        WRITEINT(_rdm.packet.Data+8+n+n, _initData->supportedParameters[n]);
-      }
-      respondMessage(true);
-
-    } // case E120_SUPPORTED_PARAMETERS
       break;
 
     case SWAPINT(E120_PRODUCT_DETAIL_ID_LIST):

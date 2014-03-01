@@ -54,20 +54,30 @@ void rgb(byte r, byte g, byte b)
   analogWrite(BluePin,  b);
 } // rgb()
 
-// see DMXSerial2.h for the definition of the fields of this structure
-uint16_t my_pids[] = {E120_DEVICE_HOURS, 
-                      E120_LAMP_HOURS};
 
+// E1.20-6.2.10.2; Table A-3: may represent either a well known Parameter, or 
+// a Manufacturer-specific parameter.
+uint16_t supportedParameters[] = {E120_DEVICE_HOURS, 
+                                  E120_LAMP_HOURS};
+
+// E1.20 Table A-6:  may be used by the controller for grouping or other 
+// sorting methods when patching or displaying system information.  Max 6 IDs
+uint16_t productDetailIDList[] = {E120_PRODUCT_DETAIL_LED,
+                                  E120_PRODUCT_DETAIL_COLORCHANGE,
+                                  E120_PRODUCT_DETAIL_PWM};
+
+// see DMXSerial2.h for the definition of the fields of this structure
 struct RDMINIT rdmInit = {
   0x0987,               // Manufacturer ID, Change this to your manufacturer ID. Get a manufacturer ID at http://tsp.plasa.org/tsp/working_groups/CP/mfctrIDs.php
   "mathertel.de",       // Manufacturer Label
   1,                    // Device Model ID
   "Arduino RDM Device", // Device Model Label
   0x01000000,           // Software Version
-  E120_PRODUCT_CATEGORY_DIMMER_CS_LED, // Product Category, see rdm.h for all available defines
-  3,                    // footprint
-  (sizeof(my_pids)/sizeof(uint16_t)), 
-  my_pids
+  E120_PRODUCT_CATEGORY_DIMMER_CS_LED, // Product Category, E1.20 Table A-5
+  3,                    // DMX footprint
+  //(sizeof(supportedParameters)/sizeof(uint16_t)), 
+  supportedParameters,
+  productDetailIDList
 };
 
 

@@ -105,10 +105,10 @@ struct RDMINIT {
   const uint16_t   deviceModelId;
   const char      *deviceModel;
   const uint32_t   softwareVersion;
-  const uint16_t   productCategory;
+  const uint16_t   productCategory;     // E1.20-10.5.1; Table A-5
   const uint16_t   footprint;
-  const uint16_t   additionalCommandsLength;
-  const uint16_t  *additionalCommands;
+  const uint16_t  *supportedParameters; // E1.20-6.2.10.2; Table A-3
+  const uint16_t  *productDetailIDList; // E1.20-10.5.2; Table A-6: max 6 IDs
 }; // struct RDMINIT
 
 struct PARAMETER_DESCRIPTION_RESPONSE {

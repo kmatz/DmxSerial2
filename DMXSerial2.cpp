@@ -856,6 +856,8 @@ void DMXSerialClass2::_processRDMMessage()
         break;
       } 
 
+      int supportedParametersLength = sizeof(_initData->supportedParameters)/sizeof(uint16_t);
+
       // Some supported PIDs shouldn't be returned as per the standard, these are:
       // E120_DISC_UNIQUE_BRANCH
       // E120_DISC_MUTE
@@ -865,12 +867,13 @@ void DMXSerialClass2::_processRDMMessage()
       // E120_DEVICE_INFO
       // E120_DMX_START_ADDRESS
       // E120_SOFTWARE_VERSION_LABEL
-      _rdm.packet.DataLength = 2 * (3 + _initData->additionalCommandsLength);
+      _rdm.packet.DataLength = 2 * (4 + supportedParametersLength);
       WRITEINT(_rdm.packet.Data   , E120_MANUFACTURER_LABEL);
       WRITEINT(_rdm.packet.Data+ 2, E120_DEVICE_MODEL_DESCRIPTION);
       WRITEINT(_rdm.packet.Data+ 4, E120_DEVICE_LABEL);
-      for (int n = 0; n < _initData->additionalCommandsLength; n++) {
-        WRITEINT(_rdm.packet.Data+6+n+n, _initData->additionalCommands[n]);
+      WRITEINT(_rdm.packet.Data+ 6, E120_PRODUCT_DETAIL_ID_LIST);
+      for (int n = 0; n < supportedParametersLength; n++) {
+        WRITEINT(_rdm.packet.Data+6+n+n, _initData->supportedParameters[n]);
       }
       handled = true;
 

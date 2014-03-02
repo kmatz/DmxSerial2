@@ -346,7 +346,8 @@ void _DMXSerialWriteByte(uint8_t data);
 
 void respondMessage(boolean isHandled, uint16_t nackReason = E120_NR_UNKNOWN_PID);
 void respondDiscovery();
-int random255();
+int  random255();
+void software_Reboot();
 
 // ----- Class implementation -----
 
@@ -847,6 +848,22 @@ void DMXSerialClass2::_processRDMMessage()
       respondMessage(true);
 
     } // case E120_SUPPORTED_PARAMETERS
+      break;
+
+    case SWAPINT(E120_RESET_DEVICE):
+    { 
+      if (CmdClass != E120_SET_COMMAND) {
+        respondMessage(false, E120_NR_UNSUPPORTED_COMMAND_CLASS); // set not supported
+        break;
+      }
+
+      // ignore reset type
+
+      _rdm.packet.DataLength = 0;
+      respondMessage(true);
+      software_Reboot();
+
+    } // case E120_RESET_DEVICE
       break;
 
     default:

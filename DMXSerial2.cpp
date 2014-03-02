@@ -681,7 +681,8 @@ void DMXSerialClass2::_processRDMMessage()
       uint16_t RDMParameters[] = { E120_MANUFACTURER_LABEL,
                                    E120_DEVICE_MODEL_DESCRIPTION,
                                    E120_DEVICE_LABEL,
-                                   E120_PRODUCT_DETAIL_ID_LIST
+                                   E120_PRODUCT_DETAIL_ID_LIST,
+                                   E120_RESET_DEVICE
                                   };
 
       int RDMParametersLength = sizeof(RDMParameters)/sizeof(uint16_t);
